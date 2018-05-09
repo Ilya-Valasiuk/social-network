@@ -1,0 +1,13 @@
+.marker {
+  position: relative;
+  cursor: pointer;
+}
+
+.marker:hover {
+  opacity: 0.8;
+}
+
+/* .marker img {
+  width: 40px;
+  height: 40px;;
+} */
