@@ -3,6 +3,8 @@ import GoogleMapReact from 'google-map-react';
 import { Modal } from '../modal/modal';
 import { Marker } from './marker';
 
+import './map.css';
+
 const AnyReactComponent = ({ text }) => <div>{text}</div>;
 
 export class Map extends Component {
@@ -24,10 +26,11 @@ export class Map extends Component {
     });
   }
 
-  markerClick = (userId) => {
+  markerClick = (userId, displayName) => {
     this.setState({
       showModal: true,
       modalUser: userId,
+      modalUserName: displayName,
     });
   }
 
@@ -35,6 +38,7 @@ export class Map extends Component {
     this.setState({
       showModal: false,
       modalUser: null,
+      modalUserName: null,
     });
   }
 
@@ -44,12 +48,12 @@ export class Map extends Component {
   }
 
   render() {
-    const { center, zoom, showModal, modalUser } = this.state;
+    const { center, zoom, showModal, modalUser, modalUserName } = this.state;
     const { photo, users } = this.props;
 
     return (
       // Important! Always set the container height explicitly
-      <div className="d-flex align-items-center justify-content-center" style={{ height: '100vh', width: '100%' }}>
+      <div className="d-flex align-items-center justify-content-center map_wrapper">
         {
           center ?
             <Fragment>
@@ -64,7 +68,7 @@ export class Map extends Component {
                   photo={photo}
                 />
                 {
-                  users.map(({ position, id, photoLink }) => {
+                  users.map(({ position, id, photoLink, displayName }) => {
                     return (
                       position ? <Marker
                         key={id}
@@ -72,7 +76,7 @@ export class Map extends Component {
                         lng={position.lng}
                         photo={photoLink}
                         id={id}
-                        onMarkerClick={(...data) => this.markerClick(...data)}
+                        onMarkerClick={(...data) => this.markerClick(id, displayName)}
                       /> : null
                     );
                 })
@@ -81,8 +85,8 @@ export class Map extends Component {
               <Modal
                 modal={showModal}
                 user={modalUser}
-                title="Are you sure you want to send invintation?"
-                bodyMessage={`Do you want to send invite to ${modalUser}?`}
+                title="Приглашение?"
+                bodyMessage={`Отправить приглашение ${modalUserName}?`}
                 onSuccess={() => this.sendInvite(modalUser)}
                 onCloseModal={() => this.closeModal()}
               />

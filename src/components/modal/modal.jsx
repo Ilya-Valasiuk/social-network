@@ -12,8 +12,8 @@ export class Modal extends React.Component {
           {this.props.bodyMessage}
         </ModalBody>
         <ModalFooter>
-          <Button color="success" onClick={() => this.props.onSuccess()}>Send</Button>{' '}
-          <Button color="secondary" onClick={() => this.props.onCloseModal()}>Cancel</Button>
+          <Button color="success" onClick={() => this.props.onSuccess()}>Ок</Button>{' '}
+          <Button color="secondary" onClick={() => this.props.onCloseModal()}>Закрыть</Button>
         </ModalFooter>
       </ReactModal>
     );

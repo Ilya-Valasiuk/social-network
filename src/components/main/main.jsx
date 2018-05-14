@@ -5,13 +5,7 @@ import { LoadingScreen } from './loading-screen';
 import { Map } from './../map/map';
 import { Modal } from './../modal/modal';
 import { LOCAL_HOST, LOCAL_URL_PREFIX } from '../../config/config';
-import { fetchData, postData } from './../../helper';
-
-function getUserId({ search }) {
-  const userId = search.split('userId=')[1];
-
-  return userId;
-}
+import { fetchData, postData, getUserId } from './../../helper';
 
 export class Main extends Component {
   state = {
@@ -38,7 +32,8 @@ export class Main extends Component {
         if (data && data.invite && data.userId === this.state.userId) {
           this.setState({
             invitation: {
-              fromUserId: data.fromUserId
+              fromUserId: data.fromUserId,
+              fromUserName: data.fromUserName
             }
           });
         }
@@ -74,6 +69,7 @@ export class Main extends Component {
       invite: true,
       userId,
       fromUserId: this.state.userId,
+      fromUserName: this.state.displayName,
     }));
   }
 
@@ -92,6 +88,7 @@ export class Main extends Component {
     postData(`${LOCAL_URL_PREFIX}/user/${this.state.userId}/notification`, {
       notification: {
         fromUserId,
+        fromUserName: this.state.displayName,
         fromObjectUserId: this.state._id,
         place: 'Shevchenko',
         time: new Date(),
@@ -109,7 +106,7 @@ export class Main extends Component {
 
 
   render() {
-    const { showInterests, userId, isLoading, interests, photoLink, users, invitation, _id } = this.state;
+    const { showInterests, userId, displayName, isLoading, interests, photoLink, users, invitation, _id } = this.state;
 
     if (isLoading) {
       return (
@@ -125,10 +122,13 @@ export class Main extends Component {
 
     return (
       <section>
-        <div>User id - {userId}</div>
-        <Button onClick={() => this.toggleInterests()}>Edit Interests</Button>
+        <div className="text-center">
+          <h2>Интересы</h2>
+          <Button color="success" onClick={() => this.toggleInterests()}>Выбрать</Button>
+        </div>
 
-        <div className="py-3">
+        <div className="py-3 text-center">
+          <h2>Карта</h2>
           <Map
             photo={photoLink}
             users={users}
@@ -138,8 +138,8 @@ export class Main extends Component {
           {
             invitation &&
               <Modal
-                title="Invintation"
-                bodyMessage={`Invintation from ${invitation.fromUserId}`}
+                title="Встреча"
+                bodyMessage={`Встреча с ${invitation.fromUserName}`}
                 onSuccess={() => this.saveInvintation(invitation.fromUserId)}
                 onCloseModal={() => this.discardInvintation()}
                 modal

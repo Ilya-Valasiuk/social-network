@@ -4,13 +4,10 @@ import { Container, Row, Col } from 'reactstrap';
 export function SignUp() {
   return (
     <Container>
-      <h1>Social network</h1>
-      <div>
-        <p>Please login with:</p>
-        <ul>
-          <li><a href="http://localhost:3000/api/auth/vkontakte">vk</a></li>
-        </ul>
-      </div>
+      <p className="h3">Авторизироваться через</p>
+      <ul>
+        <li><a href="http://localhost:3000/api/auth/vkontakte">Вконтакте</a></li>
+      </ul>
     </Container>
   );
 }

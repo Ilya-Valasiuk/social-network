@@ -19,3 +19,9 @@ export function fetchData(url) {
   return fetch(url)
     .then(response => response.json());
 }
+
+export function getUserId({ search }) {
+  const userId = search.split('userId=')[1];
+
+  return userId;
+}

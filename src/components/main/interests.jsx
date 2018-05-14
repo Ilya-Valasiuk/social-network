@@ -1,8 +1,24 @@
-import React, { Component } from 'react';
-import { ButtonGroup, Button } from 'reactstrap'
+import React, { Component, Fragment } from 'react';
+import { forEach, map } from 'lodash';
+import { ButtonGroup, Button, Row, Col, CardDeck } from 'reactstrap'
 import { LoadingScreen } from './loading-screen';
 import { LOCAL_URL_PREFIX } from '../../config/config';
 import { fetchData, postData } from './../../helper';
+import { InterstsCard } from './interests-card';
+
+const createInterestsMap = interests => {
+  const result = {};
+
+  forEach(interests, (interest) => {
+    if (result[interest.category]) {
+      result[interest.category].push(interest);
+    } else {
+      result[interest.category] = [].concat(interest);
+    }
+  });
+
+  return result;
+};
 
 export class Interests extends Component {
   state = {
@@ -48,35 +64,43 @@ export class Interests extends Component {
 
   render() {
     const { isLoading, interests, selected } = this.state;
-
-    console.log(this.state)
+    const interestsMap = createInterestsMap(interests);
 
     if (isLoading) {
       return <LoadingScreen />;
     }
 
     return (
-      <section>
-        <div>Choose Interests</div>
+      <section className="">
+        <h2 className="mb-3 text-center">Выберите интересы</h2>
+        {
+          map(interestsMap, (categoryMap, title) => {
+            return (
+              <Fragment key={title}>
+                <h3 className="text-left">{title}</h3>
+                <CardDeck className="py-3">
+                  {
+                    categoryMap.map(interest => (
+                      // <Col sm="3" key={interest._id}>
+                        <InterstsCard
+                          key={interest._id}
+                          title={interest.title}
+                          previewLink={interest.previewLink}
+                          onClick={() => this.toggleInterest(interest)}
+                          isActive={selected.some(selectedEl => selectedEl._id === interest._id)}
+                        />
+                      // </Col>
+                    ))
+                  }
+                </CardDeck>
+              </Fragment>
+            );
+          })
+        }
 
-        <ButtonGroup>
-          {
-            interests.map(interest => (
-              <Button
-                key={interest._id}
-                color="primary"
-                onClick={() => this.toggleInterest(interest)}
-                active={selected.some(selectedEl => selectedEl._id === interest._id)}
-              >
-                {interest.title}
-              </Button>
-            ))
-          }
-        </ButtonGroup>
-
-        <div className="py-3">
-          <Button color="success" onClick={() => this.sendInterets()}>Update Intersts</Button>
-          <Button onClick={this.props.toggleInterests}>Close Intersts</Button>
+        <div className="py-5">
+          <Button color="success" className="mr-3" onClick={() => this.sendInterets()}>Обновить интересы</Button>
+          <Button onClick={this.props.toggleInterests}>Закрыть</Button>
         </div>
 
       </section>
