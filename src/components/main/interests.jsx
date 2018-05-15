@@ -1,6 +1,6 @@
 import React, { Component, Fragment } from 'react';
 import { forEach, map } from 'lodash';
-import { ButtonGroup, Button, Row, Col, CardDeck } from 'reactstrap'
+import { Button, CardDeck } from 'reactstrap'
 import { LoadingScreen } from './loading-screen';
 import { LOCAL_URL_PREFIX } from '../../config/config';
 import { fetchData, postData } from './../../helper';
@@ -23,7 +23,7 @@ const createInterestsMap = interests => {
 export class Interests extends Component {
   state = {
     isLoading: true,
-    selected: this.props.interests,
+    selected: this.props.user.interests,
   }
 
   componentDidMount() {
@@ -55,7 +55,7 @@ export class Interests extends Component {
       return null;
     }
 
-    postData(`${LOCAL_URL_PREFIX}/user/${this.props.userId}/interests`, { interests: interestsIds }, 'PUT')
+    postData(`${LOCAL_URL_PREFIX}/user/${this.props.user.id}/interests`, { interests: interestsIds }, 'PUT')
       .then(() => { this.props.fetchUser() })
       .catch(err => {
         console.log(err);
@@ -63,7 +63,7 @@ export class Interests extends Component {
   }
 
   render() {
-    const { isLoading, interests, selected } = this.state;
+    const { isLoading, selected, interests } = this.state;
     const interestsMap = createInterestsMap(interests);
 
     if (isLoading) {
@@ -81,15 +81,13 @@ export class Interests extends Component {
                 <CardDeck className="py-3">
                   {
                     categoryMap.map(interest => (
-                      // <Col sm="3" key={interest._id}>
-                        <InterstsCard
-                          key={interest._id}
-                          title={interest.title}
-                          previewLink={interest.previewLink}
-                          onClick={() => this.toggleInterest(interest)}
-                          isActive={selected.some(selectedEl => selectedEl._id === interest._id)}
-                        />
-                      // </Col>
+                      <InterstsCard
+                        key={interest._id}
+                        title={interest.title}
+                        previewLink={interest.previewLink}
+                        onClick={() => this.toggleInterest(interest)}
+                        isActive={selected.some(selectedEl => selectedEl._id === interest._id)}
+                      />
                     ))
                   }
                 </CardDeck>
@@ -99,7 +97,7 @@ export class Interests extends Component {
         }
 
         <div className="py-5">
-          <Button color="success" className="mr-3" onClick={() => this.sendInterets()}>Обновить интересы</Button>
+          <Button color="success" className="mr-3" onClick={this.sendInterets}>Обновить интересы</Button>
           <Button onClick={this.props.toggleInterests}>Закрыть</Button>
         </div>
 

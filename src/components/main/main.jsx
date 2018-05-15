@@ -1,21 +1,22 @@
 import React, { Component } from 'react';
-import { Button } from 'reactstrap'
+import { Button, Badge} from 'reactstrap'
 import { Interests } from './interests';
 import { LoadingScreen } from './loading-screen';
 import { Map } from './../map/map';
 import { Modal } from './../modal/modal';
 import { LOCAL_HOST, LOCAL_URL_PREFIX } from '../../config/config';
 import { fetchData, postData, getUserId } from './../../helper';
+import { NotificationGroup } from './../notification-card/notification-group';
 
 export class Main extends Component {
   state = {
-    userId: getUserId(this.props.location),
     invitation: null,
     isLoading: true,
+    showNotificationModal: false,
   }
 
   componentDidMount() {
-    this.fetchUser(this.state.userId);
+    this.fetchUser(getUserId(this.props.location));
 
     // Create WebSocket connection.
     this.socket = new WebSocket(`ws://${LOCAL_HOST}`);
@@ -29,13 +30,15 @@ export class Main extends Component {
     this.socket.addEventListener('message', (event) => {
       try {
         const data = JSON.parse(event.data);
-        if (data && data.invite && data.userId === this.state.userId) {
+        if (data && data.invite && data.user.id === this.state.user.id) {
           this.setState({
             invitation: {
-              fromUserId: data.fromUserId,
-              fromUserName: data.fromUserName
+              fromUser: data.fromUser,
+              data: data.data,
             }
           });
+        } else if (data && data.accept && data.user.id === this.state.user.id) {
+          this.saveInvintation(data.fromUser, data.data, false);
         }
       } catch(e) {
         console.log(e);
@@ -52,8 +55,10 @@ export class Main extends Component {
       .then(({ user, users }) => {
         const { interests, ...userData } = user;
         this.setState({
-          ...userData,
-          interests,
+          user: {
+            interests,
+            ...userData,
+          },
           showInterests: !interests.length,
           isLoading: false,
           users,
@@ -64,17 +69,26 @@ export class Main extends Component {
       });
   }
 
-  sendInvite = (userId) => {
+  sendInvite = (user, data) => {
     this.socket.send(JSON.stringify({
       invite: true,
-      userId,
-      fromUserId: this.state.userId,
-      fromUserName: this.state.displayName,
+      user,
+      data,
+      fromUser: this.state.user,
     }));
   }
 
+  acceptInvite = (user, inviteData) => {
+    this.socket.send(JSON.stringify({
+      accept: true,
+      user,
+      data: inviteData,
+      fromUser: this.state.user,
+    }));
+  };
+
   updateUserPosition = (position) => {
-    postData(`${LOCAL_URL_PREFIX}/user/${this.state.userId}/position`, {
+    postData(`${LOCAL_URL_PREFIX}/user/${this.state.user.id}/position`, {
       position
     }, 'PUT')
       // .then()
@@ -84,19 +98,27 @@ export class Main extends Component {
     this.setState(prevState => ({ showInterests: !prevState.showInterests }));
   }
 
-  saveInvintation = (fromUserId) => {
-    postData(`${LOCAL_URL_PREFIX}/user/${this.state.userId}/notification`, {
+  toggleNotificationModal = () => {
+    this.setState(prevState => ({ showNotificationModal: !prevState.showNotificationModal }));
+  }
+
+  saveInvintation = (fromUser, inviteData, isAccept = true) => {
+    postData(`${LOCAL_URL_PREFIX}/user/${this.state.user.id}/notification`, {
       notification: {
-        fromUserId,
-        fromUserName: this.state.displayName,
-        fromObjectUserId: this.state._id,
-        place: 'Shevchenko',
-        time: new Date(),
+        fromObjectUserId: fromUser._id,
+        place: inviteData.place,
+        time: inviteData.time,
+        date: inviteData.date,
       }
     }, 'PUT')
-    .then((user) => {
-      debugger
-      console.log(user);
+    .then(({ user }) => {
+      this.setState({ user });
+
+      if (isAccept) {
+        this.acceptInvite(fromUser, inviteData);
+
+        this.setState({ invitation: null });
+      }
     })
   }
 
@@ -104,9 +126,12 @@ export class Main extends Component {
     this.setState({ invitation: null });
   }
 
+  onNotificationRemove = (notificationId) => {
+    console.log(notificationId);
+  }
 
   render() {
-    const { showInterests, userId, displayName, isLoading, interests, photoLink, users, invitation, _id } = this.state;
+    const { showInterests, isLoading, users, invitation, user, showNotificationModal } = this.state;
 
     if (isLoading) {
       return (
@@ -116,7 +141,11 @@ export class Main extends Component {
 
     if (showInterests) {
       return (
-        <Interests userId={userId} interests={interests} fetchUser={() => this.fetchUser(userId)} toggleInterests={() => this.toggleInterests()} />
+        <Interests
+          user={user}
+          fetchUser={() => this.fetchUser(user.id)}
+          toggleInterests={this.toggleInterests}
+        />
       );
     }
 
@@ -124,27 +153,38 @@ export class Main extends Component {
       <section>
         <div className="text-center">
           <h2>Интересы</h2>
-          <Button color="success" onClick={() => this.toggleInterests()}>Выбрать</Button>
+          <Button color="success" onClick={this.toggleInterests}>Выбрать</Button>
         </div>
 
         <div className="py-3 text-center">
-          <h2>Карта</h2>
+          <h2>Карта <Badge color="secondary" onClick={this.toggleNotificationModal}>{user.notifications.length}</Badge></h2>
           <Map
-            photo={photoLink}
+            user={user}
             users={users}
-            updateUserPosition={(...data) => this.updateUserPosition(...data)}
-            sendInvite={(...data) => this.sendInvite(...data)}
+            updateUserPosition={this.updateUserPosition}
+            sendInvite={this.sendInvite}
           />
           {
             invitation &&
               <Modal
                 title="Встреча"
-                bodyMessage={`Встреча с ${invitation.fromUserName}`}
-                onSuccess={() => this.saveInvintation(invitation.fromUserId)}
+                onSuccess={() => this.saveInvintation(invitation.fromUser, invitation.data)}
                 onCloseModal={() => this.discardInvintation()}
                 modal
-              />
+              >
+                <p>Встреча с {invitation.fromUser.displayName}</p>
+                <p>Место - { invitation.data.place }</p>
+                <p>Дата - { invitation.data.date }</p>
+                <p>Время - { invitation.data.time }</p>
+              </Modal>
           }
+          <Modal
+            title="Встречи"
+            onSuccess={this.toggleNotificationModal}
+            modal={showNotificationModal}
+          >
+            <NotificationGroup notifications={user.notifications} onRemove={this.onNotificationRemove} />
+          </Modal>
         </div>
       </section>
     );

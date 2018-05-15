@@ -1,7 +1,7 @@
 import React, { Component, Fragment } from 'react';
 import GoogleMapReact from 'google-map-react';
-import { Modal } from '../modal/modal';
 import { Marker } from './marker';
+import { Invivation } from './invatation';
 
 import './map.css';
 
@@ -26,11 +26,10 @@ export class Map extends Component {
     });
   }
 
-  markerClick = (userId, displayName) => {
+  markerClick = user => {
     this.setState({
       showModal: true,
-      modalUser: userId,
-      modalUserName: displayName,
+      modalUser: user,
     });
   }
 
@@ -38,18 +37,17 @@ export class Map extends Component {
     this.setState({
       showModal: false,
       modalUser: null,
-      modalUserName: null,
     });
   }
 
-  sendInvite = (userId) => {
-    this.props.sendInvite(userId);
+  sendInvite = ({ user, data }) => {
+    this.props.sendInvite(user, data);
     this.closeModal();
   }
 
   render() {
     const { center, zoom, showModal, modalUser, modalUserName } = this.state;
-    const { photo, users } = this.props;
+    const { users, user } = this.props;
 
     return (
       // Important! Always set the container height explicitly
@@ -65,35 +63,33 @@ export class Map extends Component {
                 <Marker
                   lat={center.lat}
                   lng={center.lng}
-                  photo={photo}
+                  user={user}
                 />
                 {
-                  users.map(({ position, id, photoLink, displayName }) => {
+                  users.map(user => {
                     return (
-                      position ? <Marker
-                        key={id}
-                        lat={position.lat}
-                        lng={position.lng}
-                        photo={photoLink}
-                        id={id}
-                        onMarkerClick={(...data) => this.markerClick(id, displayName)}
+                      user.position ? <Marker
+                        key={user.id}
+                        lat={user.position.lat}
+                        lng={user.position.lng}
+                        user={user}
+                        onMarkerClick={this.markerClick}
                       /> : null
                     );
                 })
                 }
               </GoogleMapReact>
-              <Modal
-                modal={showModal}
-                user={modalUser}
-                title="Приглашение?"
-                bodyMessage={`Отправить приглашение ${modalUserName}?`}
-                onSuccess={() => this.sendInvite(modalUser)}
-                onCloseModal={() => this.closeModal()}
-              />
             </Fragment> :
             <div>Map is loading...</div>
         }
-        
+        {
+          showModal && <Invivation
+            showModal={showModal}
+            user={modalUser}
+            onSuccess={this.sendInvite}
+            onCloseModal={this.closeModal}
+          />
+        }
       </div>
     );
   }

@@ -38,9 +38,9 @@ export class Header extends React.Component {
               <NavItem>
                 <NavLink href="/signup">Авторизация</NavLink>
               </NavItem>
-              <NavItem>
+              {/* <NavItem>
                 <NavLink href="https://github.com/reactstrap/reactstrap">Нотификации</NavLink>
-              </NavItem>
+              </NavItem> */}
               {/* <UncontrolledDropdown nav inNavbar>
                 <DropdownToggle nav caret>
                   Options

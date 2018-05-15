@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "availity-reactstrap-validation": "^2.0.2",
     "bootstrap": "^4.1.1",
     "google-map-react": "^1.0.0",
     "lodash": "^4.17.10",

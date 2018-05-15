@@ -6,14 +6,14 @@ import { Button, Modal as ReactModal, ModalHeader, ModalBody, ModalFooter } from
 export class Modal extends React.Component {
   render() {
     return (
-      <ReactModal isOpen={this.props.modal} toggle={() => this.props.onCloseModal()} className={this.props.className}>
-        <ModalHeader toggle={() => this.props.onCloseModal()}>{this.props.title}</ModalHeader>
+      <ReactModal isOpen={this.props.modal} toggle={this.props.onCloseModal} className={this.props.className}>
+        <ModalHeader toggle={this.props.onCloseModal}>{this.props.title}</ModalHeader>
         <ModalBody>
-          {this.props.bodyMessage}
+          {this.props.children}
         </ModalBody>
         <ModalFooter>
-          <Button color="success" onClick={() => this.props.onSuccess()}>Ок</Button>{' '}
-          <Button color="secondary" onClick={() => this.props.onCloseModal()}>Закрыть</Button>
+          {this.props.onSuccess && <Button color="success" onClick={this.props.onSuccess}>Ок</Button>}
+          {this.props.onCloseModal && <Button color="secondary" onClick={this.props.onCloseModal}>Закрыть</Button>}
         </ModalFooter>
       </ReactModal>
     );
