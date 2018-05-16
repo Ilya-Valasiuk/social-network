@@ -19,7 +19,7 @@ export class Main extends Component {
     this.fetchUser(getUserId(this.props.location));
 
     // Create WebSocket connection.
-    this.socket = new WebSocket(`ws://${LOCAL_HOST}`);
+    this.socket = new WebSocket(`wss://${LOCAL_HOST}`);
 
     // Connection opened
     this.socket.addEventListener('open', (event) => {
